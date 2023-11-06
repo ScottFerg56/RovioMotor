@@ -25,9 +25,9 @@ unsigned long timeMotorLast = 0;
 unsigned long timeStatusLast = 0;
 
 // Right Motor has encoder on opposite side from other motors, so encoder pins must be reversed WRT motor polarity
-Encoders LeftMotorEncoder(32,14);
-Encoders RightMotorEncoder(A4,A5);
-Encoders RearMotorEncoder(A2,A3);
+Encoders LeftMotorEncoder;
+Encoders RightMotorEncoder;
+Encoders RearMotorEncoder;
 
 #ifdef KNOBS
 Adafruit_seesaw SeeSaw;
@@ -136,6 +136,9 @@ void setup()
 #endif
 
     MotorShield.begin();
+    LeftMotorEncoder.Init(32,14);
+    RightMotorEncoder.Init(A4,A5);
+    RearMotorEncoder.Init(A2,A3);
     LeftMotor.Init( MotorShield.getMotor(4), &LeftMotorEncoder);
     RightMotor.Init(MotorShield.getMotor(3), &RightMotorEncoder);
     RearMotor.Init( MotorShield.getMotor(1), &RearMotorEncoder);

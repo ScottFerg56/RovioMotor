@@ -7,7 +7,7 @@
 
 class Encoders{
   public:  
-    Encoders(byte pinA, byte pinB);
+    void Init(byte pinA, byte pinB);
     static void interruptEncoder1(){
       if(Encoders::_instances[0] != NULL)
       Encoders::_instances[0]->encoderCount();

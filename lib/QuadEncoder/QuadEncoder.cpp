@@ -7,7 +7,7 @@
 
 Encoders *Encoders::_instances[MAX_NUM_ENCODERS] = {NULL, NULL,NULL, NULL};
 uint8_t Encoders::_whichEncoder = 0;
-Encoders::Encoders(byte pinA, byte pinB){
+void Encoders::Init(byte pinA, byte pinB){
    _encoderPINA = pinA;
    _encoderPINB = pinB;
    pinMode(_encoderPINA, INPUT_PULLUP);  
