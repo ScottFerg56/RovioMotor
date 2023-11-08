@@ -136,9 +136,9 @@ void setup()
 #endif
 
     MotorShield.begin();
-    LeftMotorEncoder.Init(32,14);
-    RightMotorEncoder.Init(A4,A5);
-    RearMotorEncoder.Init(A2,A3);
+    LeftMotorEncoder.Init(14, A4);   // B0, B1
+    RightMotorEncoder.Init(A5, 32);  // B0, B1
+    RearMotorEncoder.Init(A2, A3);   // B1, B0
     LeftMotor.Init( MotorShield.getMotor(4), &LeftMotorEncoder);
     RightMotor.Init(MotorShield.getMotor(3), &RightMotorEncoder);
     RearMotor.Init( MotorShield.getMotor(1), &RearMotorEncoder);
@@ -223,9 +223,9 @@ void loop()
         plot("LeftGoal", LeftMotor.SpeedGoal);
         plot("RightGoal", RightMotor.SpeedGoal);
         plot("RearGoal", RearMotor.SpeedGoal);
-        //plot("LeftCount", LeftMotor.Count);
-        //plot("RightCount", RightMotor.Count);
-        //plot("RearCount", RearMotor.Count);
+        plot("LeftCount", LeftMotor.Count);
+        plot("RightCount", RightMotor.Count);
+        plot("RearCount", RearMotor.Count);
         plot("LeftRPM", LeftMotor.RPM);
         plot("RightRPM", RightMotor.RPM);
         plot("RearRPM", RearMotor.RPM);
