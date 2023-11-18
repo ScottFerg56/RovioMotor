@@ -2,6 +2,7 @@
 
 Adafruit_MotorShield DriveMotor::MotorShield = Adafruit_MotorShield();
 bool DriveMotor::MotorShieldInitialized = false;
+bool DriveMotor::DirectDrive = false;
 
 template <typename T> int sgn(T val)
 {
@@ -21,6 +22,7 @@ void DriveMotor::SetProperty(int8_t property, int8_t value)
         break;
 
     case MotorProperties_RPM:   // read only!
+    case MotorProperties_Power: // read only!
     default:                    // invalid property
         // UNDONE: error reporting
         break;
@@ -34,11 +36,10 @@ void DriveMotor::Loop(unsigned long dmsec)
     RPMChanged |= rpm != RPM;
     RPM = rpm;
     MotorEncoder.setEncoderCount(0);
-
+    float power = 0;
     if (SpeedGoal == 0 && RPM < 4)
     {
       // avoid problems at low RPM
-        Power = 0;
         Output = 0;
         ErrorSum = 0;
         dError = 0;
@@ -57,12 +58,15 @@ void DriveMotor::Loop(unsigned long dmsec)
         Output = constrain(Output, MinOut, MaxOut);
 
         Error = error;
-        Power += Output;
+        power += Output;
         if (DirectDrive)    // stupid direct control for testing purposes
-            Power = SpeedGoal;
+            power = SpeedGoal;
     }
-    if (sgn(Power) != sgn(SpeedGoal))  // avoid reversing the motor harshly!
-        Power = 0;
+    if (sgn(power) != sgn(SpeedGoal))  // avoid reversing the motor harshly!
+        power = 0;
+    PowerChanged |= power != Power;
+    Power = power;
+    
     Motor->setSpeed(abs(Power));
     Motor->run(Power == 0 ? RELEASE : (Power < 0 ? BACKWARD : FORWARD));
 }

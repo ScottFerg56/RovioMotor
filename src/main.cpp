@@ -132,7 +132,7 @@ void loop()
             Motors[e-Entities_LeftMotor].Loop(dmsec);
     }
     dmsec = msec - timeStatusLast;
-    if (dmsec >= 1000)
+    if (dmsec >= 500)
     {
         timeStatusLast = msec;
         int8_t packet[6];
@@ -144,6 +144,12 @@ void loop()
                 Motors[e-Entities_LeftMotor].RPMChanged = false;
                 *p++ = e << 4 | MotorProperties_RPM;
                 *p++ = Motors[e-Entities_LeftMotor].RPM;
+            }
+            if (Motors[e-Entities_LeftMotor].PowerChanged)
+            {
+                Motors[e-Entities_LeftMotor].PowerChanged = false;
+                *p++ = e << 4 | MotorProperties_Power;
+                *p++ = Motors[e-Entities_LeftMotor].Power;
             }
         }
         int len = p-packet;

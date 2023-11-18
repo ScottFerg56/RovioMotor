@@ -15,13 +15,14 @@ protected:
     static bool MotorShieldInitialized;
 public:
     float SpeedGoal = 0;
-    bool DirectDrive = false;
+    static bool DirectDrive;
     long Count = 0;
     int CountsPerRev = 960;
     float RPM = 0;
     bool RPMChanged = false;
     int Output = 0;
     int Power = 0;
+    bool PowerChanged = false;
     float Kp = 3.0;
     float Ki = 0.1;
     float Kd = 0.0;

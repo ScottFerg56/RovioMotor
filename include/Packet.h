@@ -27,6 +27,7 @@ enum MotorProperties
 {
     MotorProperties_Goal,
     MotorProperties_RPM,
+    MotorProperties_Power,
     MotorProperties_DirectDrive,
 };
 
