@@ -36,10 +36,11 @@ void DriveMotor::Loop(unsigned long dmsec)
     RPMChanged |= rpm != RPM;
     RPM = rpm;
     MotorEncoder.setEncoderCount(0);
-    float power = 0;
+    float power = Power;
     if (SpeedGoal == 0 && RPM < 4)
     {
       // avoid problems at low RPM
+        power = 0;
         Output = 0;
         ErrorSum = 0;
         dError = 0;
