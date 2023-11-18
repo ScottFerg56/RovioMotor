@@ -3,18 +3,6 @@
 
 #include <Arduino.h>
 
-enum PacketCmds
-{
-    CmdNone,
-    // int8_t -100 to 100
-    CmdLeftMotorGoal,
-    CmdRightMotorGoal,
-    CmdRearMotorGoal,
-    CmdLeftMotorRPM,
-    CmdRightMotorRPM,
-    CmdRearMotorRPM,
-};
-
 enum Entities
 {
     Entities_LeftMotor,
