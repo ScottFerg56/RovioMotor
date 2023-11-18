@@ -135,7 +135,7 @@ void loop()
     if (dmsec >= 500)
     {
         timeStatusLast = msec;
-        int8_t packet[6];
+        int8_t packet[12];
         int8_t* p = packet;
         for (int8_t e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
         {
