@@ -26,8 +26,8 @@ public:
     float Kp = 3.0;
     float Ki = 0.1;
     float Kd = 0.0;
-    const float MinOut = -255;
-    const float MaxOut = 255;
+    const int MinOut = -255;
+    const int MaxOut = 255;
     float Error = 0;
     float ErrorSum = 0;
     float dError;

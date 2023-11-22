@@ -36,7 +36,7 @@ void DriveMotor::Loop(unsigned long dmsec)
     RPMChanged |= rpm != RPM;
     RPM = rpm;
     MotorEncoder.setEncoderCount(0);
-    float power = Power;
+    int power = Power;
     if (SpeedGoal == 0 && RPM < 4)
     {
       // avoid problems at low RPM
@@ -56,10 +56,10 @@ void DriveMotor::Loop(unsigned long dmsec)
 
         // Calculate the new output by adding all three elements together
         Output = Kp * error + Ki * ErrorSum + Kd * dError;
-        Output = constrain(Output, MinOut, MaxOut);
+        power += Output;
+        power = constrain(power, MinOut, MaxOut);
 
         Error = error;
-        power += Output;
         if (DirectDrive)    // stupid direct control for testing purposes
             power = SpeedGoal;
     }
