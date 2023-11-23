@@ -9,12 +9,12 @@ template <typename T> int sgn(T val)
     return (T(0) < val) - (val < T(0));
 }
 
-void DriveMotor::SetProperty(int8_t property, int8_t value)
+void DriveMotor::setProperty(int8_t property, int16_t value)
 {
     switch (property)
     {
     case MotorProperties_Goal:
-        SpeedGoal = value;
+        Goal = value;
         break;
     
     case MotorProperties_DirectDrive:
@@ -29,6 +29,49 @@ void DriveMotor::SetProperty(int8_t property, int8_t value)
     }
 }
 
+int16_t DriveMotor::getProperty(int8_t property)
+{
+    switch (property)
+    {
+    case MotorProperties_Goal:
+        return (int16_t)roundf(Goal);
+
+    case MotorProperties_RPM:
+        return (int16_t)roundf(RPM);
+    
+    case MotorProperties_Power:
+        return Power;
+    
+    case MotorProperties_DirectDrive:
+        return (int8_t)DirectDrive;
+
+    default:                    // invalid property
+        // UNDONE: error reporting
+        return -1;
+    }
+}
+
+bool DriveMotor::getPropertyChanged(int8_t property)
+{
+    bool changed = false;
+    switch (property)
+    {
+    case MotorProperties_Goal:
+    case MotorProperties_DirectDrive:
+        break;
+
+    case MotorProperties_RPM:
+        changed = RPMChanged;
+        RPMChanged = false;
+        break;
+    
+    case MotorProperties_Power:
+        changed = PowerChanged;
+        PowerChanged = false;
+        break;
+    }
+    return changed;
+}
 void DriveMotor::Loop(unsigned long dmsec)
 {
     Count = MotorEncoder.getEncoderCount();
@@ -37,7 +80,7 @@ void DriveMotor::Loop(unsigned long dmsec)
     RPM = rpm;
     MotorEncoder.setEncoderCount(0);
     int power = Power;
-    if (SpeedGoal == 0 && RPM < 4)
+    if (Goal == 0 && RPM < 4)
     {
       // avoid problems at low RPM
         power = 0;
@@ -49,7 +92,7 @@ void DriveMotor::Loop(unsigned long dmsec)
     {
         // PID computations
         float dsec = dmsec / 1.0e3;
-        float error = SpeedGoal - RPM;
+        float error = Goal - RPM;
         ErrorSum += error * dsec;
         //ErrorSum = constrain(ErrorSum, MinOut * 1.1, MaxOut * 1.1);
         dError = (error - Error) / dsec;
@@ -61,9 +104,9 @@ void DriveMotor::Loop(unsigned long dmsec)
 
         Error = error;
         if (DirectDrive)    // stupid direct control for testing purposes
-            power = SpeedGoal;
+            power = Goal;
     }
-    if (sgn(power) != sgn(SpeedGoal))  // avoid reversing the motor harshly!
+    if (sgn(power) != sgn(Goal))  // avoid reversing the motor harshly!
         power = 0;
     PowerChanged |= power != Power;
     Power = power;

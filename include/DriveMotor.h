@@ -14,14 +14,14 @@ protected:
     static Adafruit_MotorShield MotorShield;
     static bool MotorShieldInitialized;
 public:
-    float SpeedGoal = 0;
+    float Goal = 0;
     static bool DirectDrive;
     long Count = 0;
-    int CountsPerRev = 960;
+    const int CountsPerRev = 960;
     float RPM = 0;
     bool RPMChanged = false;
-    int Output = 0;
-    int Power = 0;
+    int16_t Output = 0;
+    int16_t Power = 0;
     bool PowerChanged = false;
     float Kp = 3.0;
     float Ki = 0.1;
@@ -45,7 +45,9 @@ public:
 
     void Loop(unsigned long dmsec);
 
-    void SetProperty(int8_t property, int8_t value);
+    void setProperty(int8_t property, int16_t value);
+    int16_t getProperty(int8_t property);
+    bool getPropertyChanged(int8_t property);
 };
 
 #endif
