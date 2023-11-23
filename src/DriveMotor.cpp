@@ -1,4 +1,5 @@
 #include "DriveMotor.h"
+#include "FLogger.h"
 
 Adafruit_MotorShield DriveMotor::MotorShield = Adafruit_MotorShield();
 bool DriveMotor::MotorShieldInitialized = false;
@@ -72,6 +73,21 @@ bool DriveMotor::getPropertyChanged(Properties property)
     }
     return changed;
 }
+
+void DriveMotor::Init(int motorNum, byte pinA, byte pinB)
+{
+    if (!MotorShieldInitialized)
+    {
+        if (!MotorShield.begin())
+            flogf("MotorShield init failed");
+        MotorShieldInitialized = true;
+    }
+    Motor = MotorShield.getMotor(motorNum);
+    if (Motor == nullptr)
+        flogf("MotorShield getMotor failed");
+    MotorEncoder.Init(pinA, pinB);
+}
+
 void DriveMotor::Loop(unsigned long dmsec)
 {
     Count = MotorEncoder.getEncoderCount();

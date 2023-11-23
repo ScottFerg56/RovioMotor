@@ -32,17 +32,7 @@ public:
     float ErrorSum = 0;
     float dError;
 
-    void Init(int motorNum, byte pinA, byte pinB)
-    {
-        if (!MotorShieldInitialized)
-        {
-            MotorShield.begin();
-            MotorShieldInitialized = true;
-        }
-        Motor = MotorShield.getMotor(motorNum);
-        MotorEncoder.Init(pinA, pinB);
-    }
-
+    void Init(int motorNum, byte pinA, byte pinB);
     void Loop(unsigned long dmsec);
 
     void setProperty(Properties property, int16_t value);

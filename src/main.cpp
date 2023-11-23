@@ -13,27 +13,6 @@ unsigned long timeStatusLast = 0;
 
 DriveMotor Motors[3];
 
-void dump(const char* name, float v)
-{
-  Serial.print(name);
-  Serial.print(":");
-  Serial.println(v, 3);
-}
-
-#ifdef PLOT
-void plot(const char* name, float v)
-{
-  if (!DoPlot)
-    return;
-  Serial.print(">");
-  Serial.print(name);
-  //Serial.print(":");
-  //Serial.print(timeMotorLast);
-  Serial.print(":");
-  Serial.println(v, 3);
-}
-#endif
-
 float Map(float value, float fromLow, float fromHigh, float toLow, float toHigh)
 {
   return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
@@ -88,7 +67,7 @@ bool getEntityPropertyChanged(Entities entity, Properties property)
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
     if (status != ESP_NOW_SEND_SUCCESS)
-        Serial.println("Delivery Fail");
+        floge("Delivery Fail");
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *pData, int len)
@@ -106,24 +85,27 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *pData, int len)
 
 void setup()
 {
+    FLogger::setLogLevel(FLOG_DEBUG);
     timeMotorLast = millis();
     Serial.begin(115200);
     delay(1000);    // for Serial
 
-    Serial.println("In setup");
+    flogi("In setup");
 
     // Right Motor has encoder on opposite side from other motors, so encoder pins must be reversed WRT motor polarity
-    Motors[Entities_LeftMotor ].Init(4, 14, A4);
-    Motors[Entities_RightMotor].Init(3, A5, 32);
-    Motors[Entities_RearMotor ].Init(1, A2, A3);
+    getMotor(Entities_LeftMotor ).Init(4, 14, A4);
+    getMotor(Entities_RightMotor).Init(3, A5, 32);
+    getMotor(Entities_RearMotor ).Init(1, A2, A3);
 
-    WiFi.mode(WIFI_STA);
+    flogi("WIFI init");
+    if (!WiFi.mode(WIFI_STA))
+        flogf("%s FAILED", "WIFI init");
 
+    flogi("MAC addr: %s", WiFi.macAddress().c_str());
+
+    flogi("ESP_NOW init");
     if (esp_now_init() != ESP_OK)
-    {
-        Serial.println("Error initializing ESP-NOW");
-        while(1);
-    }
+        flogf("%s FAILED", "ESP_NOW init");
 
     esp_now_register_send_cb(OnDataSent);
 
@@ -131,13 +113,11 @@ void setup()
     peerInfo.channel = 0;  
     peerInfo.encrypt = false;
     if (esp_now_add_peer(&peerInfo) != ESP_OK)
-    {
-        Serial.println("Failed to add peer");
-        while(1);
-    }
+        flogf("%s FAILED", "ESP_NOW peer add");
     
     esp_now_register_recv_cb(OnDataRecv);
-    Serial.println("Setup complete");
+    flogi("completed");
+    delay(1000);
 }
 
 void loop()
@@ -145,11 +125,11 @@ void loop()
     unsigned long msec = millis();
     unsigned long dmsec = msec - timeMotorLast;
     if (dmsec >= 100)
-    { 
+    {
         timeMotorLast = msec;
 
         for (Entities e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
-            Motors[e-Entities_LeftMotor].Loop(dmsec);
+            getMotor(e).Loop(dmsec);
     }
     dmsec = msec - timeStatusLast;
     if (dmsec >= 500)
