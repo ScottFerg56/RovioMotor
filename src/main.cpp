@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
-//#include <Adafruit_MotorShield.h>
-//#include <QuadEncoder.h>
+#include "FLogger.h"
 #include "DriveMotor.h"
 #include <esp_now.h>
 #include <WiFi.h>
@@ -44,12 +43,12 @@ uint8_t ctrlMacAddress[] = {0xE8, 0x9F, 0x6D, 0x22, 0x02, 0xEC};
 
 esp_now_peer_info_t peerInfo;
 
-DriveMotor& getMotor(int8_t entity)
+DriveMotor& getMotor(Entities entity)
 {
     return Motors[entity - Entities_LeftMotor];
 }
 
-void setEntityProperty(int8_t entity, int8_t property, int8_t value)
+void setEntityProperty(Entities entity, Properties property, int16_t value)
 {
     switch (entity)
     {
@@ -58,18 +57,10 @@ void setEntityProperty(int8_t entity, int8_t property, int8_t value)
     case Entities_RearMotor:
         getMotor(entity).setProperty(property, value);
         break;
-
-    case Entities_AllMotors:
-        for (int8_t m = Entities_LeftMotor; m <= Entities_RearMotor; m++)
-            getMotor(m).setProperty(property, value);
-        break;
-    
-    default:    // invalid enity
-        break;
     }
 }
 
-int8_t getEntityProperty(int8_t entity, int8_t property)
+int16_t getEntityProperty(Entities entity, Properties property)
 {
     switch (entity)
     {
@@ -77,14 +68,11 @@ int8_t getEntityProperty(int8_t entity, int8_t property)
     case Entities_RightMotor:
     case Entities_RearMotor:
         return getMotor(entity).getProperty(property);
-
-    case Entities_AllMotors:    // invalid
-    default:    // invalid enity
-        return -1;
     }
+    return -1;
 }
 
-bool getEntityPropertyChanged(int8_t entity, int8_t property)
+bool getEntityPropertyChanged(Entities entity, Properties property)
 {
     switch (entity)
     {
@@ -92,9 +80,7 @@ bool getEntityPropertyChanged(int8_t entity, int8_t property)
     case Entities_RightMotor:
     case Entities_RearMotor:
         return getMotor(entity).getPropertyChanged(property);
-
-    case Entities_AllMotors:    // invalid
-    default:    // invalid enity
+    default:
         return false;
     }
 }
@@ -107,19 +93,14 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *pData, int len)
 {
-    if (len == 0 || (len % 4) != 0)
+    Packet packet;
+    int cnt = len / sizeof(Packet);
+    while (cnt > 0)
     {
-        Serial.println("invalid data packet length");
-        return;
-    }
-    while (len >= 4)
-    {
-        uint8_t entity = *pData++;
-        uint8_t property = *pData++;
-        int16_t value = *pData++;
-        value |= *pData++ << 8;
-        len -= 4;
-        setEntityProperty(entity, property, value);
+        memcpy(&packet, pData, sizeof(Packet));
+        pData += sizeof(Packet);
+        cnt--;
+        setEntityProperty(packet.entity, packet.property, packet.value);
     }
 }
 
@@ -167,47 +148,43 @@ void loop()
     { 
         timeMotorLast = msec;
 
-        for (int8_t e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
+        for (Entities e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
             Motors[e-Entities_LeftMotor].Loop(dmsec);
     }
     dmsec = msec - timeStatusLast;
     if (dmsec >= 500)
     {
         timeStatusLast = msec;
-        uint8_t packet[32];     // enough for at least 4 entities, with 2 properties and 4 bytes each
-        uint8_t *p = packet;
-        uint8_t len = 0;
-        for (int8_t entity = Entities_LeftMotor; entity <= Entities_RearMotor; entity++)
+
+        const int len = 10;
+        Packet packets[len];     // enough for a few properties
+        uint8_t cnt = 0;
+        for (Entities entity = Entities_LeftMotor; entity <= Entities_RearMotor; entity++)
         {
-            for (int8_t prop = MotorProperties_Goal; prop <= MotorProperties_DirectDrive; prop++)
+            for (Properties prop = Properties_Goal; prop <= Properties_DirectDrive; prop++)
             {
                 if (getEntityPropertyChanged(entity, prop))
                 {
-                    int16_t value = getEntityProperty(entity, prop);
-                    if (prop != MotorProperties_RPM && prop != MotorProperties_Power)   // skip readonly
+                    if (cnt >= len)
                     {
-                        if (len + 4 >= sizeof(packet))
-                        {
-                            Serial.println("packet buffer too small");
-                            break;
-                        }
-                        else
-                        {
-                            *p++ = entity;
-                            *p++ = prop;
-                            *p++ = (uint8_t)(value & 0xFF);
-                            *p++ = (uint8_t)(value >> 8);
-                            len += 4;
-                        }
+                        floge("packet buffer too small");
+                        break;
+                    }
+                    if (prop != Properties_Goal && prop != Properties_DirectDrive)   // skip writeonly
+                    {
+                        packets[cnt].entity = entity;
+                        packets[cnt].property = prop;
+                        packets[cnt].value = getEntityProperty(entity, prop);
+                        cnt++;
                     }
                 }
             }
         }
-        if (len > 0)
+        if (cnt > 0)
         {
-            esp_err_t result = esp_now_send(peerInfo.peer_addr, (uint8_t*)&packet, len);
+            esp_err_t result = esp_now_send(peerInfo.peer_addr, (uint8_t*)&packets, cnt * sizeof(Packet));
             if (result != ESP_OK)
-                Serial.println("Error sending the data");
+                floge("Error sending data");
         }
     }
 }

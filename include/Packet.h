@@ -61,9 +61,9 @@ inline Properties operator++(Properties& k, int)
 class Entity
 {
 public:
-    virtual void setProperty(int8_t property, int16_t value) = 0;
-    virtual int16_t getProperty(int8_t property) = 0;
-    virtual bool getPropertyChanged(int8_t property) = 0;
+    virtual void setProperty(Properties property, int16_t value) = 0;
+    virtual int16_t getProperty(Properties property) = 0;
+    virtual bool getPropertyChanged(Properties property) = 0;
 };
 
 struct Packet

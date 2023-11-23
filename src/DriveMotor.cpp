@@ -9,41 +9,41 @@ template <typename T> int sgn(T val)
     return (T(0) < val) - (val < T(0));
 }
 
-void DriveMotor::setProperty(int8_t property, int16_t value)
+void DriveMotor::setProperty(Properties property, int16_t value)
 {
     switch (property)
     {
-    case MotorProperties_Goal:
+    case Properties_Goal:
         Goal = value;
         break;
     
-    case MotorProperties_DirectDrive:
+    case Properties_DirectDrive:
         DirectDrive = value != 0;
         break;
 
-    case MotorProperties_RPM:   // read only!
-    case MotorProperties_Power: // read only!
+    case Properties_RPM:   // read only!
+    case Properties_Power: // read only!
     default:                    // invalid property
         // UNDONE: error reporting
         break;
     }
 }
 
-int16_t DriveMotor::getProperty(int8_t property)
+int16_t DriveMotor::getProperty(Properties property)
 {
     switch (property)
     {
-    case MotorProperties_Goal:
+    case Properties_Goal:
         return (int16_t)roundf(Goal);
 
-    case MotorProperties_RPM:
+    case Properties_RPM:
         return (int16_t)roundf(RPM);
     
-    case MotorProperties_Power:
+    case Properties_Power:
         return Power;
     
-    case MotorProperties_DirectDrive:
-        return (int8_t)DirectDrive;
+    case Properties_DirectDrive:
+        return (int16_t)DirectDrive;
 
     default:                    // invalid property
         // UNDONE: error reporting
@@ -51,21 +51,21 @@ int16_t DriveMotor::getProperty(int8_t property)
     }
 }
 
-bool DriveMotor::getPropertyChanged(int8_t property)
+bool DriveMotor::getPropertyChanged(Properties property)
 {
     bool changed = false;
     switch (property)
     {
-    case MotorProperties_Goal:
-    case MotorProperties_DirectDrive:
+    case Properties_Goal:
+    case Properties_DirectDrive:
         break;
 
-    case MotorProperties_RPM:
+    case Properties_RPM:
         changed = RPMChanged;
         RPMChanged = false;
         break;
     
-    case MotorProperties_Power:
+    case Properties_Power:
         changed = PowerChanged;
         PowerChanged = false;
         break;

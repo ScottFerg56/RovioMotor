@@ -45,9 +45,9 @@ public:
 
     void Loop(unsigned long dmsec);
 
-    void setProperty(int8_t property, int16_t value);
-    int16_t getProperty(int8_t property);
-    bool getPropertyChanged(int8_t property);
+    void setProperty(Properties property, int16_t value);
+    int16_t getProperty(Properties property);
+    bool getPropertyChanged(Properties property);
 };
 
 #endif
