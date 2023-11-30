@@ -12,6 +12,11 @@ unsigned long timeMotorLast = 0;
 unsigned long timeStatusLast = 0;
 
 DriveMotor Motors[3];
+Adafruit_DCMotor* HeadMotor;
+
+int16_t HeadGoal = 0;
+int16_t HeadPower = 0;
+bool HeadPowerChanged = false;
 
 float Map(float value, float fromLow, float fromHigh, float toLow, float toHigh)
 {
@@ -36,6 +41,13 @@ void setEntityProperty(Entities entity, Properties property, int16_t value)
     case Entities_RearMotor:
         getMotor(entity).setProperty(property, value);
         break;
+    case Entities_Head:
+        switch (property)
+        {
+        case Properties_Goal:
+            HeadGoal = value;
+            break;
+        }
     }
 }
 
@@ -47,6 +59,12 @@ int16_t getEntityProperty(Entities entity, Properties property)
     case Entities_RightMotor:
     case Entities_RearMotor:
         return getMotor(entity).getProperty(property);
+    case Entities_Head:
+        switch (property)
+        {
+        case Properties_Power:
+            return HeadPower;
+        }
     }
     return -1;
 }
@@ -59,9 +77,19 @@ bool getEntityPropertyChanged(Entities entity, Properties property)
     case Entities_RightMotor:
     case Entities_RearMotor:
         return getMotor(entity).getPropertyChanged(property);
-    default:
-        return false;
+    case Entities_Head:
+        switch (property)
+        {
+        case Properties_Power:
+            {
+                bool changed = HeadPowerChanged;
+                HeadPowerChanged = false;
+                return changed;
+            }
+        }
+        break;
     }
+    return false;
 }
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -97,6 +125,8 @@ void setup()
     getMotor(Entities_RightMotor).Init(3, A5, 32);
     getMotor(Entities_RearMotor ).Init(1, A2, A3);
 
+    HeadMotor = DriveMotor::MotorShield.getMotor(2);
+
     flogi("WIFI init");
     if (!WiFi.mode(WIFI_STA))
         flogf("%s FAILED", "WIFI init");
@@ -130,6 +160,14 @@ void loop()
 
         for (Entities e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
             getMotor(e).Loop(dmsec);
+        if (HeadPower != HeadGoal)
+        {
+            HeadPowerChanged = true;
+            HeadPower = HeadGoal;
+            HeadMotor->setSpeed(abs(HeadPower));
+            HeadMotor->run(HeadPower == 0 ? RELEASE : (HeadPower < 0 ? BACKWARD : FORWARD));
+        }
+        Serial.printf(">Head Power:%i\r\n", HeadPower);
     }
     dmsec = msec - timeStatusLast;
     if (dmsec >= 500)

@@ -11,9 +11,9 @@ class DriveMotor : Entity
 protected:
     Adafruit_DCMotor* Motor;
     Encoders MotorEncoder;
-    static Adafruit_MotorShield MotorShield;
     static bool MotorShieldInitialized;
 public:
+    static Adafruit_MotorShield MotorShield;
     float Goal = 0;
     static bool DirectDrive;
     long Count = 0;

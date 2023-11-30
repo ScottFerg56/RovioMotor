@@ -9,10 +9,11 @@ enum Entities : uint8_t
     Entities_LeftMotor,
     Entities_RightMotor,
     Entities_RearMotor,
+    Entities_Head,
 };
 
 const Entities firstEntity = Entities_LeftMotor;
-const Entities  lastEntity = Entities_RearMotor;
+const Entities  lastEntity = Entities_Head;
 
 // prefix ++
 inline Entities& operator++(Entities& k)
