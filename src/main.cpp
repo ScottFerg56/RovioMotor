@@ -167,7 +167,9 @@ void loop()
             HeadMotor->setSpeed(abs(HeadPower));
             HeadMotor->run(HeadPower == 0 ? RELEASE : (HeadPower < 0 ? BACKWARD : FORWARD));
         }
+        u_int16_t val = analogRead(37);
         Serial.printf(">Head Power:%i\r\n", HeadPower);
+        Serial.printf(">Head Pos:%i\r\n", val);
     }
     dmsec = msec - timeStatusLast;
     if (dmsec >= 500)
