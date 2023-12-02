@@ -1,5 +1,5 @@
-#ifndef DriveMotor_h
-#define DriveMotor_h
+#ifndef _DRIVEMOTOR_H
+#define _DRIVEMOTOR_H
 
 #include <Arduino.h>
 #include <Adafruit_MotorShield.h>
@@ -38,6 +38,8 @@ public:
     void setProperty(Properties property, int16_t value);
     int16_t getProperty(Properties property);
     bool getPropertyChanged(Properties property);
+    bool propertyToBot(Properties property);
+    bool propertyFromBot(Properties property);
 };
 
-#endif
+#endif // _DRIVEMOTOR_H

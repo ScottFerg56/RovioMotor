@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "FLogger.h"
 #include "DriveMotor.h"
+#include "Head.h"
 #include <esp_now.h>
 #include <WiFi.h>
 #include <Wire.h>
@@ -12,11 +13,7 @@ unsigned long timeMotorLast = 0;
 unsigned long timeStatusLast = 0;
 
 DriveMotor Motors[3];
-Adafruit_DCMotor* HeadMotor;
-
-int16_t HeadGoal = 0;
-int16_t HeadPower = 0;
-bool HeadPowerChanged = false;
+Head head;
 
 float Map(float value, float fromLow, float fromHigh, float toLow, float toHigh)
 {
@@ -42,12 +39,8 @@ void setEntityProperty(Entities entity, Properties property, int16_t value)
         getMotor(entity).setProperty(property, value);
         break;
     case Entities_Head:
-        switch (property)
-        {
-        case Properties_Goal:
-            HeadGoal = value;
-            break;
-        }
+        head.setProperty(property, value);
+        break;
     }
 }
 
@@ -60,11 +53,7 @@ int16_t getEntityProperty(Entities entity, Properties property)
     case Entities_RearMotor:
         return getMotor(entity).getProperty(property);
     case Entities_Head:
-        switch (property)
-        {
-        case Properties_Power:
-            return HeadPower;
-        }
+        return head.getProperty(property);
     }
     return -1;
 }
@@ -78,16 +67,21 @@ bool getEntityPropertyChanged(Entities entity, Properties property)
     case Entities_RearMotor:
         return getMotor(entity).getPropertyChanged(property);
     case Entities_Head:
-        switch (property)
-        {
-        case Properties_Power:
-            {
-                bool changed = HeadPowerChanged;
-                HeadPowerChanged = false;
-                return changed;
-            }
-        }
-        break;
+        return head.getPropertyChanged(property);
+    }
+    return false;
+}
+
+bool getEntityPropertyFromBot(Entities entity, Properties property)
+{
+    switch (entity)
+    {
+    case Entities_LeftMotor:
+    case Entities_RightMotor:
+    case Entities_RearMotor:
+        return getMotor(entity).propertyFromBot(property);
+    case Entities_Head:
+        return head.propertyFromBot(property);
     }
     return false;
 }
@@ -124,8 +118,7 @@ void setup()
     getMotor(Entities_LeftMotor ).Init(4, 14, A4);
     getMotor(Entities_RightMotor).Init(3, A5, 32);
     getMotor(Entities_RearMotor ).Init(1, A2, A3);
-
-    HeadMotor = DriveMotor::MotorShield.getMotor(2);
+    head.Init(2, 37);
 
     flogi("WIFI init");
     if (!WiFi.mode(WIFI_STA))
@@ -160,16 +153,7 @@ void loop()
 
         for (Entities e = Entities_LeftMotor; e <= Entities_RearMotor; e++)
             getMotor(e).Loop(dmsec);
-        if (HeadPower != HeadGoal)
-        {
-            HeadPowerChanged = true;
-            HeadPower = HeadGoal;
-            HeadMotor->setSpeed(abs(HeadPower));
-            HeadMotor->run(HeadPower == 0 ? RELEASE : (HeadPower < 0 ? BACKWARD : FORWARD));
-        }
-        u_int16_t val = analogRead(37);
-        Serial.printf(">Head Power:%i\r\n", HeadPower);
-        Serial.printf(">Head Pos:%i\r\n", val);
+        head.Loop(dmsec);
     }
     dmsec = msec - timeStatusLast;
     if (dmsec >= 500)
@@ -185,13 +169,13 @@ void loop()
             {
                 if (getEntityPropertyChanged(entity, prop))
                 {
-                    if (cnt >= len)
+                    if (getEntityPropertyFromBot(entity, prop))
                     {
-                        floge("packet buffer too small");
-                        break;
-                    }
-                    if (prop != Properties_Goal && prop != Properties_DirectDrive)   // skip writeonly
-                    {
+                        if (cnt >= len)
+                        {
+                            floge("packet buffer too small");
+                            break;
+                        }
                         packets[cnt].entity = entity;
                         packets[cnt].property = prop;
                         packets[cnt].value = getEntityProperty(entity, prop);

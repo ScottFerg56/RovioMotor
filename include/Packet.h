@@ -37,6 +37,7 @@ enum Properties : uint8_t
     Properties_RPM,
     Properties_Power,
     Properties_DirectDrive,
+    Properties_Position,
     // controller-only properties:
     Properties_ControlMode,
 };
@@ -65,6 +66,8 @@ public:
     virtual void setProperty(Properties property, int16_t value) = 0;
     virtual int16_t getProperty(Properties property) = 0;
     virtual bool getPropertyChanged(Properties property) = 0;
+    virtual bool propertyToBot(Properties property) = 0;
+    virtual bool propertyFromBot(Properties property) = 0;
 };
 
 struct Packet

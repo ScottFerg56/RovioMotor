@@ -74,6 +74,30 @@ bool DriveMotor::getPropertyChanged(Properties property)
     return changed;
 }
 
+bool DriveMotor::propertyToBot(Properties property)
+{
+    switch (property)
+    {
+    case Properties_Goal:
+    case Properties_DirectDrive:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool DriveMotor::propertyFromBot(Properties property)
+{
+    switch (property)
+    {
+    case Properties_RPM:
+    case Properties_Power:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void DriveMotor::Init(int motorNum, byte pinA, byte pinB)
 {
     if (!MotorShieldInitialized)
@@ -125,8 +149,10 @@ void DriveMotor::Loop(unsigned long dmsec)
     if (sgn(power) != sgn(Goal))  // avoid reversing the motor harshly!
         power = 0;
     PowerChanged |= power != Power;
-    Power = power;
-    
-    Motor->setSpeed(abs(Power));
-    Motor->run(Power == 0 ? RELEASE : (Power < 0 ? BACKWARD : FORWARD));
+    if (PowerChanged)
+    {
+        Power = power;
+        Motor->setSpeed(abs(Power));
+        Motor->run(Power == 0 ? RELEASE : (Power < 0 ? BACKWARD : FORWARD));
+    }
 }
