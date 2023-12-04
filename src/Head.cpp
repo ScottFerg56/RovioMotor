@@ -62,6 +62,7 @@ bool Head::propertyFromBot(Properties property)
     switch (property)
     {
     case Properties_Position:
+    case Properties_Power:
         return true;
     default:
         return false;
@@ -92,28 +93,25 @@ void Head::Loop(unsigned long dmsec)
     // positive motor power values extend the head while negative values retract it
     //
     u_int16_t val = analogRead(37);
-    val = 100 - (val - 600 + 11) / 24;
-    if (Position != val)
+    int16_t pos = map(val, 730, 3100, 100, 0);
+    pos = constrain(pos, 0, 100);
+    //val = 100 - (val - 600 + 11) / 24;
+    if (Position != pos)
     {
-        Position = val;
-        PositionChanged |= true;
-        if (Power > 0 && Position >= 100)
-        {
-            Power = 0;
-            PowerChanged = true;
-        }
-        else if (Power < 0 && Position <= 0)
-        {
-            Power = 0;
-            PowerChanged = true;
-        }
+        Position = pos;
+        PositionChanged = true;
+    }
+    if (Power > 0 && Position >= 100 || Power < 0 && Position <= 0)
+    {
+        Power = 0;
+        PowerChanged = true;
     }
 
-    Serial.printf(">Head Power:%i\r\n", Power);
-    Serial.printf(">Head Pos:%i\r\n", Position);
+    //Serial.printf(">Head Encoder:%i\r\n", val);
+    //Serial.printf(">Head Power:%i\r\n", Power);
+    //Serial.printf(">Head Pos:%i\r\n", Position);
     if (PowerChanged)
     {
-        PowerChanged = false;
         Motor->setSpeed(abs(Power));
         Motor->run(Power == 0 ? RELEASE : (Power < 0 ? BACKWARD : FORWARD));
     }

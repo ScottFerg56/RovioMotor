@@ -163,9 +163,9 @@ void loop()
         const int len = 10;
         Packet packets[len];     // enough for a few properties
         uint8_t cnt = 0;
-        for (Entities entity = Entities_LeftMotor; entity <= Entities_RearMotor; entity++)
+        for (Entities entity = firstEntity; entity <= lastEntity; entity++)
         {
-            for (Properties prop = Properties_Goal; prop <= Properties_DirectDrive; prop++)
+            for (Properties prop = firstProperty; prop <= lastProperty; prop++)
             {
                 if (getEntityPropertyChanged(entity, prop))
                 {
@@ -176,6 +176,7 @@ void loop()
                             floge("packet buffer too small");
                             break;
                         }
+                        //Serial.printf("entity/prop sent: %i %i\r\n", entity, prop);
                         packets[cnt].entity = entity;
                         packets[cnt].property = prop;
                         packets[cnt].value = getEntityProperty(entity, prop);

@@ -43,7 +43,7 @@ enum Properties : uint8_t
 };
 
 const Properties firstProperty = Properties_Goal;
-const Properties lastProperty = Properties_DirectDrive;
+const Properties lastProperty = Properties_Position;
 
 // prefix ++
 inline Properties& operator++(Properties& k)
