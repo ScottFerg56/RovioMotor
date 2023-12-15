@@ -44,6 +44,8 @@ Bot Rovio;
 unsigned long timeMotorLast = 0;
 unsigned long timeStatusLast = 0;
 
+// our Mac Address = {0xE8, 0x9F, 0x6D, 0x32, 0xDE, 0x2C}
+
 uint8_t ctrlMacAddress[] = {0xE8, 0x9F, 0x6D, 0x22, 0x02, 0xEC};
 
 void setup()
