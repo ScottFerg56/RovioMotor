@@ -3,9 +3,11 @@
 #include "FLogger.h"
 #include "DriveMotor.h"
 #include "Head.h"
+#include "NavLights.h"
 #include <esp_now.h>
 #include <WiFi.h>
 #include <Wire.h>
+#include "LEDAnimator.h"
 
 #include "Packet.h"
 #include "Domain.h"
@@ -22,7 +24,8 @@ DriveMotor LeftMotor = DriveMotor(EntityID_LeftMotor, "Left Motor");
 DriveMotor RightMotor = DriveMotor(EntityID_RightMotor, "Right Motor");
 DriveMotor RearMotor = DriveMotor(EntityID_RearMotor, "Rear Motor");
 Head HeadX = Head(EntityID_Head, "Head");
-Entity* entities[5] = { &LeftMotor, &RightMotor, &RearMotor, &HeadX, nullptr };
+NavLights NavLites = NavLights(EntityID_NavLights, "Nav Lights");
+Entity* entities[6] = { &LeftMotor, &RightMotor, &RearMotor, &HeadX, &NavLites, nullptr };
 
 class Bot : public Domain
 {
@@ -34,15 +37,13 @@ public:
         RightMotor.Init(3, A5, 32);
         RearMotor.Init(1, A2, A3);
         HeadX.Init(2, 37);
+        NavLites.Init();
     }
     
     Bot() : Domain(true, entities) {}
 };
 
 Bot Rovio;
-
-unsigned long timeMotorLast = 0;
-unsigned long timeStatusLast = 0;
 
 // our Mac Address = {0xE8, 0x9F, 0x6D, 0x32, 0xDE, 0x2C}
 
@@ -51,9 +52,8 @@ uint8_t ctrlMacAddress[] = {0xE8, 0x9F, 0x6D, 0x22, 0x02, 0xEC};
 void setup()
 {
     FLogger::setLogLevel(FLOG_DEBUG);
-    timeMotorLast = millis();
     Serial.begin(115200);
-    delay(1000);    // for Serial
+    delay(3000);    // for Serial
 
     flogi("started");
 
@@ -65,28 +65,10 @@ void setup()
 
 void loop()
 {
-    unsigned long msec = millis();
-    // time slice for processing changes coming in from the controller Domain
-    // and reporting Properties we've changed to controller
-    unsigned long dmsec = msec - timeStatusLast;
-    if (dmsec >= 500)
-    {
-        timeStatusLast = msec;
-
-        const int len = 10;
-        Packet packets[len];     // enough for a few properties
-        uint8_t cnt = 0;
-        Rovio.ProcessChanges(nullptr);
-    }
-    // time slice for controlling robot Entities
-    dmsec = msec - timeMotorLast;
-    if (dmsec >= 100)
-    {
-        timeMotorLast = msec;
-
-        LeftMotor.Loop(dmsec);
-        RightMotor.Loop(dmsec);
-        RearMotor.Loop(dmsec);
-        HeadX.Loop(dmsec);
-    }
+    LeftMotor.Loop();
+    RightMotor.Loop();
+    RearMotor.Loop();
+    HeadX.Loop();
+    NavLites.Loop();
+    Rovio.ProcessChanges(nullptr);
 }

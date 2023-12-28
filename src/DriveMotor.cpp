@@ -22,10 +22,16 @@ void DriveMotor::Init(int motorNum, byte pinA, byte pinB)
     if (Motor == nullptr)
         flogf("MotorShield getMotor failed");
     MotorEncoder.Init(pinA, pinB);
+    msPrevLoop = millis();
 }
 
-void DriveMotor::Loop(unsigned long dmsec)
+void DriveMotor::Loop()
 {
+    unsigned long msec = millis();
+    unsigned long dmsec = msec - msPrevLoop;
+    if (dmsec < 100 && !Goal.IsChanged())
+        return;
+    msPrevLoop = msec;
     // compute current RPM from encoder count
     Count = MotorEncoder.getEncoderCount();
     int16_t rpm = (int16_t)roundf((Count * 60000.0) / dmsec / CountsPerRev);

@@ -8,7 +8,7 @@ void Head::Init(int motorNum, byte pin)
         flogf("MotorShield getMotor failed");
 }
 
-void Head::Loop(unsigned long dmsec)
+void Head::Loop()
 {
     //
     // analog values [0..4095]
@@ -31,15 +31,16 @@ void Head::Loop(unsigned long dmsec)
     int16_t pos = map(val, 730, 3100, posScale, 0);
     pos = constrain(pos, 0, posScale) * (100 / posScale);
     Position.Set(pos);
-    // stop the head motor at the top and bottom limits
-    if (Power.Get() > 0 && pos >= 100 || Power.Get() < 0 && pos <= 0)
-        Power.Set(0);
+    int power = Goal.Get();
 
-    //Serial.printf(">Head Encoder:%i\r\n", val);
-    //Serial.printf(">Head Power:%i\r\n", Power);
-    //Serial.printf(">Head Pos:%i\r\n", Position);
+    // stop the head motor at the top and bottom limits
+    if (power > 0 && pos >= 100 || power < 0 && pos <= 0)
+        power = 0;
+    Power.Set(power);
+
     if (Power.IsChanged())
     {
+        //flogd("Head Goal: %i  Power: %i  Pos: %i", Goal.Get(), Power.Get(), Position.Get());
         Motor->setSpeed(abs(Power.Get()));
         Motor->run(Power.Get() == 0 ? RELEASE : (Power.Get() < 0 ? BACKWARD : FORWARD));
     }

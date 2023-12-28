@@ -35,10 +35,8 @@ public:
     void Init(int motorNum, byte pin);
     /**
      * @brief loop() processing to occur regularly
-     * 
-     * @param dmsec Milliseconds since last call
      */
-    void Loop(unsigned long dmsec);
+    void Loop();
 };
 
 #endif // _HEAD_H

@@ -24,6 +24,8 @@ protected:
      * @brief Flag to remember that DC motor FeatherWing has been initialized
      */
     static bool MotorShieldInitialized;
+    unsigned long msPrevLoop;
+
 public:
     /**
      * @brief Construct a new Drive Motor object
@@ -94,10 +96,8 @@ public:
     void Init(int motorNum, byte pinA, byte pinB);
     /**
      * @brief loop() processing to occur regularly
-     * 
-     * @param dmsec Milliseconds since last call
      */
-    void Loop(unsigned long dmsec);
+    void Loop();
 };
 
 #endif // _DRIVEMOTOR_H
